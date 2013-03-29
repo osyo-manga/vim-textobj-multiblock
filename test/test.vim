@@ -1,6 +1,6 @@
 
 function! s:pos(lnum, col)
-	return [0, a:lnum, a:col, 0]
+	return [a:lnum, a:col]
 endfunction
 
 function! s:test_test()

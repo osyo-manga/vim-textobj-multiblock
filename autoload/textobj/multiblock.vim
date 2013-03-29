@@ -4,19 +4,21 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
+let s:nullpos = [0, 0]
+
 " a <= b
 function! s:pos_less_equal(a, b)
-	return a:a[1] == a:b[1] ? a:a[2] <= a:b[2] : a:a[1] <= a:b[1]
+	return a:a[0] == a:b[0] ? a:a[1] <= a:b[1] : a:a[0] <= a:b[0]
 endfunction
 
 " a == b
 function! s:pos_equal(a, b)
-	return a:a[1] == a:b[1] && a:a[2] == a:b[2]
+	return a:a[0] == a:b[0] && a:a[1] == a:b[1]
 endfunction
 
 " a < b
 function! s:pos_less(a, b)
-	return a:a[1] == a:b[1] ? a:a[2] < a:b[2] : a:a[1] < a:b[1]
+	return a:a[0] == a:b[0] ? a:a[1] < a:b[1] : a:a[0] < a:b[0]
 endfunction
 
 " begin < pos && pos < end
@@ -24,6 +26,32 @@ function! s:is_in(range, pos)
 	return type(a:pos) == type([]) && type(get(a:pos, 0)) == type([])
 \		 ? len(a:pos) == len(filter(copy(a:pos), "s:is_in(a:range, v:val)"))
 \		 : s:pos_less(a:range[0], a:pos) && s:pos_less(a:pos, a:range[1])
+endfunction
+
+function! s:pos_next(pos)
+	if a:pos == s:nullpos
+		return a:pos
+	endif
+	let lnum = a:pos[0]
+	let col  = a:pos[1]
+	let line_size = len(getline(lnum))
+	return [
+\		line_size == col ? lnum + 1 : lnum,
+\		line_size == col ? 1        : col + 1,
+\	]
+endfunction
+
+function! s:pos_prev(pos)
+	if a:pos == s:nullpos
+		return a:pos
+	endif
+	let lnum = a:pos[0]
+	let col  = a:pos[1]
+	let line_size = len(getline(lnum))
+	return [
+\		line_size == 0 ? lnum-1               : lnum,
+\		line_size == 0 ? len(getline(lnum-1)) : col - 1,
+\	]
 endfunction
 
 
@@ -35,6 +63,7 @@ let s:blocks = [
 \	[ '"', '"' ],
 \	[ "'", "'" ],
 \]
+
 
 let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", s:blocks)
 
@@ -56,64 +85,17 @@ function! s:get_cursorchar()
 	return matchstr(getline('.'), '.', col('.')-1)
 endfunction
 
-function! s:searchpair(cursormove_key, ...)
-	if !call("searchpair", a:000)
-		return [0, 0, 0, 0]
-	endif
-	let result = getpos('.')
-	if !empty(a:cursormove_key)
-		let tmp = getpos('.')
-		execute "normal!" a:cursormove_key
-		let result = getpos('.')
-		call setpos(".", tmp)
-	endif
-	return result
-endfunction
-
-let s:nullpos = [0, 0, 0, 0]
-
-function! s:search(cursormove_key, ...)
-	if !call("search", a:000)
-		return s:nullpos
-	endif
-	let result = getpos('.')
-	if !empty(a:cursormove_key)
-		execute "normal!" a:cursormove_key
-	endif
-	return getpos('.')
-endfunction
-
 
 function! s:region_single(key, in)
-	let pos = getpos(".")
-	try
-		let end   = s:search(a:in ? "h" : "", s:regex_escape(a:key), "W")
-		let start = s:search(a:in ? "l" : "", s:regex_escape(a:key), "bW")
-	finally
-		call setpos(".", pos)
-	endtry
+	let end   = searchpos(s:regex_escape(a:key), "nW")
+	let start = searchpos(s:regex_escape(a:key), "nbW")
 	return [start, end]
 endfunction
 
 
-function! s:searchpair(cursormove_key, ...)
-	if !call("searchpair", a:000)
-		return s:nullpos
-	endif
-	if !empty(a:cursormove_key)
-		execute "normal!" a:cursormove_key
-	endif
-	return getpos('.')
-endfunction
-
 function! s:region_pair(begin, end, in)
-	let pos = getpos(".")
-	try
-		let end   = s:searchpair(a:in ? "h" : "", s:regex_escape(a:begin), "", s:regex_escape(a:end), "W")
-		let start = s:searchpair(a:in ? "l" : "", s:regex_escape(a:begin), "", s:regex_escape(a:end), "bW")
-	finally
-		call setpos(".", pos)
-	endtry
+	let end   = searchpairpos(s:regex_escape(a:begin), "", s:regex_escape(a:end), "nW")
+	let start = searchpairpos(s:regex_escape(a:begin), "", s:regex_escape(a:end), "nbW")
 	return [start, end]
 endfunction
 
@@ -135,18 +117,28 @@ function! s:select_block(in)
 endfunction
 
 
+function! s:to_cursorpos(pos)
+	if a:pos == s:nullpos
+		return [0, 0, 0, 0]
+	endif
+	return [0, a:pos[0], a:pos[1], 0]
+endfunction
+
+
 function! s:select(in)
 	if empty(getline('.'))
 		return 0
 	endif
 	
-	let old_ww = &whichwrap
-	try
-		set whichwrap=h,l
-		let [start, end] = s:select_block(a:in)
-		return ["v", start, end]
-	finally
-		let &whichwrap = old_ww
+	let [start, end] = s:select_block(a:in)
+	if a:in
+		return ["v",
+\			s:to_cursorpos(s:pos_next(start)),
+\			s:to_cursorpos(s:pos_prev(end))
+\		]
+	else
+		return ["v", s:to_cursorpos(start), s:to_cursorpos(end)]
+	endif
 	endtry
 endfunction
 
