@@ -1,0 +1,121 @@
+*textobj-multiblock.txt*	複数の括弧に対応している textobj
+
+
+==============================================================================
+概要						*textobj-multiblock-introduction*
+
+|textobj-multiblock| は設定されている複数の括弧で使用出来る textobj です。
+|g:textobj_multiblock_blocks| に設定されている括弧全てに反応します。
+この textobj を使用すると i( や i[ のように括弧ごとにキーマッピングを使い分け
+ることなく |<Plug>(textobj-multiblock-i)| という1つのマッピングで完結する事が
+出来ます。
+
+
+このプラグインを使用する場合は kana 氏が作成された |textobj-user| が必要になり
+ます。
+
+- kana/vim-textobj-user - https://github.com/kana/vim-textobj-user
+
+
+==============================================================================
+注意						*textobj-multiblock-warning*
+
+この textobj を使用した際にウィンドウのカーソル位置がズレる場合があります。
+（バッファ上のカーソル位置がズレるのではなくてウィンドウの位置がズレる。
+現状、この挙動は仕様になります。
+
+
+==============================================================================
+範囲例						*textobj-multiblock-example*
+
+	|<Plug>(textobj-multiblock-i)| が反応する範囲です。
+
+	| : カーソル位置
+	* : 有効な範囲
+>
+	" g:textobj_multiblock_blocks に設定されてある括弧に反応する
+	(***|***)
+	[***|***]
+	{***|***}
+
+
+	" " や ' も指定できる
+	"***|***"
+	'***|***'
+
+
+	" ネストしている場合
+	(   (***|***)   )
+	(*|*(*******)***)
+	{*|*(***(*******)***)**}
+
+
+	" 次のような場合は g:textobj_multiblock_blocks に
+	" 先に設定されている括弧が優先される
+
+	let g:textobj_multiblock_blocks = [["(", ")"], ["{", "}"]]
+	(*|*{*******)   }
+	(***{***|***)   }
+	(   {*******)*|*}
+
+	let g:textobj_multiblock_blocks = [["{", "}"], ["(", ")"]]
+	(   {***|***)***}
+
+
+	" + に反応して欲しい場合は次のような設定
+	let g:textobj_multiblock_blocks = [["+", "+"]]
+	+***|***+
+<
+
+
+
+==============================================================================
+設定例						*textobj-multiblock-customizing*
+
+>
+	omap ab <Plug>(textobj-multiblock-a)
+	omap ib <Plug>(textobj-multiblock-i)
+	vmap ab <Plug>(textobj-multiblock-a)
+	vmap ib <Plug>(textobj-multiblock-i)
+<
+
+
+==============================================================================
+インターフェース				*textobj-multiblock-interface*
+
+------------------------------------------------------------------------------
+マッピング					*textobj-multiblock-mapping*
+
+<Plug>(textobj-multiblock-i)			*<Plug>(textobj-multiblock-i)*
+
+括弧を含まない範囲
+
+<Plug>(textobj-multiblock-a)			*<Plug>(textobj-multiblock-a)*
+
+括弧を含む範囲
+
+
+==============================================================================
+設定						*textobj-multiblock-setting*
+
+------------------------------------------------------------------------------
+textobj-multiblock の変数			*textobj-multiblock-variables*
+
+g:textobj_multiblock_blocks			*g:textobj_multiblock_blocks*
+	textobj-multiblock が反応する括弧を設定します。
+	先に設定されている括弧ほど優先中が高い
+
+Default: >
+	let g:textobj_multiblock_blocks = [
+	\	[ "(", ")" ],
+	\	[ "[", "]" ],
+	\	[ "{", "}" ],
+	\	[ '<', '>' ],
+	\	[ '"', '"' ],
+	\	[ "'", "'" ],
+	\]
+<
+
+
+==============================================================================
+vim:tw=78:fo=tcq2mM:ts=8:ft=help:norl
