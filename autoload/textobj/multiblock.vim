@@ -135,7 +135,6 @@ function! s:select(in)
 	else
 		return ["v", s:to_cursorpos(start), s:to_cursorpos(end)]
 	endif
-	endtry
 endfunction
 
 
