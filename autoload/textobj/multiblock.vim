@@ -126,10 +126,6 @@ endfunction
 
 
 function! s:select(in)
-	if empty(getline('.'))
-		return 0
-	endif
-	
 	let [start, end] = s:select_block(a:in)
 	if a:in
 		return ["v",
