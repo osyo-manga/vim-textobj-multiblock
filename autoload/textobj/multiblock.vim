@@ -69,7 +69,7 @@ let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", s:blocks)
 
 
 function! s:get_block_pair(block)
-	let blocks = s:blocks
+	let blocks = g:textobj_multiblock_blocks
 	let result = get(filter(copy(blocks), "v:val[0] ==# a:block || v:val[1] ==# a:block"), 0, [])
 	
 	return empty(result) ? "" : result[0] ==# a:block ? result[1] : result[0]
@@ -110,7 +110,7 @@ endfunction
 
 
 function! s:select_block(in)
-	let blocks = s:blocks
+	let blocks = g:textobj_multiblock_blocks
 	let regions = filter(map(copy(blocks), "s:search_region(v:val[0], v:val[1], a:in)"), "v:val[0] != s:nullpos && v:val[1] != s:nullpos")
 	let regions = filter(copy(regions), 'empty(filter(copy(regions), "s:is_in(".string(v:val).", v:val)"))')
 	return get(regions, 0, [s:nullpos, s:nullpos])
