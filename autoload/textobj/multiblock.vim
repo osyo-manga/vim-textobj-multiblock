@@ -111,8 +111,9 @@ endfunction
 
 function! s:select_block(in)
 	let blocks = g:textobj_multiblock_blocks
-	let regions = filter(map(copy(blocks), "s:search_region(v:val[0], v:val[1], a:in)"), "v:val[0] != s:nullpos && v:val[1] != s:nullpos")
-	let regions = filter(copy(regions), 'empty(filter(copy(regions), "s:is_in(".string(v:val).", v:val)"))')
+	let regions = map(copy(blocks), "[s:search_region(v:val[0], v:val[1], a:in), get(v:val, 2, 0)]")
+	call map(filter(regions, "v:val[0][0] != s:nullpos && v:val[0][1] != s:nullpos && (v:val[1] ? v:val[0][0][0] == v:val[0][1][0] : 1)"), "v:val[0]")
+	call filter(regions, 'empty(filter(copy(regions), "s:is_in(".string(v:val).", v:val)"))')
 	return get(regions, 0, [s:nullpos, s:nullpos])
 endfunction
 

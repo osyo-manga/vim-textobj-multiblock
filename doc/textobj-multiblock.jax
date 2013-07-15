@@ -95,7 +95,7 @@ textobj-multiblock の変数			*textobj-multiblock-variables*
 
 g:textobj_multiblock_blocks			*g:textobj_multiblock_blocks*
 	textobj-multiblock が反応する括弧を設定します。
-	先に設定されている括弧ほど優先中が高い
+	先に設定されている括弧ほど優先中が高いです。
 
 Default: >
 	let g:textobj_multiblock_blocks = [
@@ -108,6 +108,14 @@ Default: >
 	\]
 <
 
+	また、各リストの第3要素に 1 を設定すると同一の行でのみマッチします。
+
+Example: >
+    " 同一行に " があった場合のみマッチする
+    let g:textobj_multiblock_blocks = [
+    \	[ '"', '"', 1 ],
+    \]
+<
 
 ==============================================================================
 vim:tw=78:fo=tcq2mM:ts=8:ft=help:norl
