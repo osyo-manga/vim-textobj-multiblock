@@ -128,6 +128,9 @@ endfunction
 
 function! s:select(in)
 	let [start, end] = s:select_block(a:in)
+	if start == s:nullpos || end == s:nullpos
+		return 0
+	endif
 	if a:in
 		return ["v",
 \			s:to_cursorpos(s:pos_next(start)),
