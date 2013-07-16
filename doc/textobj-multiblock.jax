@@ -117,5 +117,10 @@ Example: >
     \]
 <
 
+b:textobj_multiblock_blocks			*b:textobj_multiblock_blocks*
+	|g:textobj_multiblock_blocks| と同等の設定です。
+	|g:textobj_multiblock_blocks| よりも優先して使用されます。
+
+
 ==============================================================================
 vim:tw=78:fo=tcq2mM:ts=8:ft=help:norl

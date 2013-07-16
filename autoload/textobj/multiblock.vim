@@ -4,6 +4,11 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
+function! s:uniq(list)
+	return reverse(filter(reverse(a:list), "count(a:list, v:val) >= 1"))
+endfunction
+
+
 let s:nullpos = [0, 0]
 
 " a <= b
@@ -55,7 +60,7 @@ function! s:pos_prev(pos)
 endfunction
 
 
-let s:blocks = [
+let s:default_blocks = [
 \	[ "(", ")" ],
 \	[ "[", "]" ],
 \	[ "{", "}" ],
@@ -65,11 +70,14 @@ let s:blocks = [
 \]
 
 
-let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", s:blocks)
+let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", s:default_blocks)
+function! s:blocks()
+	return s:uniq(get(b:, "textobj_multiblock_blocks", []) + g:textobj_multiblock_blocks)
+endfunction
 
 
 function! s:get_block_pair(block)
-	let blocks = g:textobj_multiblock_blocks
+	let blocks = s:blocks()
 	let result = get(filter(copy(blocks), "v:val[0] ==# a:block || v:val[1] ==# a:block"), 0, [])
 	
 	return empty(result) ? "" : result[0] ==# a:block ? result[1] : result[0]
@@ -110,7 +118,7 @@ endfunction
 
 
 function! s:select_block(in)
-	let blocks = g:textobj_multiblock_blocks
+	let blocks = s:blocks()
 	let regions = map(copy(blocks), "[s:search_region(v:val[0], v:val[1], a:in), get(v:val, 2, 0)]")
 	call map(filter(regions, "v:val[0][0] != s:nullpos && v:val[0][1] != s:nullpos && (v:val[1] ? v:val[0][0][0] == v:val[0][1][0] : 1)"), "v:val[0]")
 	let regions = filter(copy(regions), 'empty(filter(copy(regions), "s:is_in(".string(v:val).", v:val)"))')
