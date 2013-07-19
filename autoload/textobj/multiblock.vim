@@ -5,7 +5,7 @@ set cpo&vim
 
 
 function! s:uniq(list)
-	return reverse(filter(reverse(a:list), "count(a:list, v:val) >= 1"))
+	return reverse(filter(reverse(a:list), "count(a:list, v:val) <= 1"))
 endfunction
 
 
