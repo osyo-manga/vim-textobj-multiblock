@@ -50,12 +50,10 @@ function! s:pos_prev(pos)
 	if a:pos == s:nullpos
 		return a:pos
 	endif
-	let lnum = a:pos[0]
-	let col  = a:pos[1]
-	let line_size = len(getline(lnum))
+	let [lnum, col] = a:pos
 	return [
-\		line_size == 0 ? lnum-1               : lnum,
-\		line_size == 0 ? len(getline(lnum-1)) : col - 1,
+\		col >= 2 ? lnum  : lnum-1,
+\		col >= 2 ? col-1 : len(getline(lnum-1))
 \	]
 endfunction
 
