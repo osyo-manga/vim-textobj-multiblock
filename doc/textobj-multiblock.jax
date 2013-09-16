@@ -95,7 +95,7 @@ textobj-multiblock の変数			*textobj-multiblock-variables*
 
 g:textobj_multiblock_blocks			*g:textobj_multiblock_blocks*
 	textobj-multiblock が反応する括弧を設定します。
-	先に設定されている括弧ほど優先中が高いです。
+	先に設定されている括弧ほど優先順位が高いです。
 
 Default: >
 	let g:textobj_multiblock_blocks = [
