@@ -68,11 +68,6 @@ let s:default_blocks = [
 \]
 
 
-let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", s:default_blocks)
-function! s:blocks()
-	return s:uniq(get(b:, "textobj_multiblock_blocks", []) + g:textobj_multiblock_blocks)
-endfunction
-
 
 function! s:get_block_pair(block)
 	let blocks = s:blocks()
@@ -92,16 +87,56 @@ function! s:get_cursorchar()
 endfunction
 
 
+
+function! s:region_search_pattern(first, last, pattern)
+	if a:first == a:last
+		return printf('\%%%dl%s\%%%dc', a:first[0], a:pattern, a:first[1])
+	elseif a:first[0] == a:last[0]
+		return printf('\%%%dl\%%>%dc%s\%%<%dc', a:first[0], a:first[1]-1, a:pattern, a:last[1]+1)
+	elseif a:last[0] - a:first[0] == 1
+		return  printf('\%%%dl%s\%%>%dc', a:first[0], a:pattern, a:first[1]-1)
+\		. "\\|" . printf('\%%%dl%s\%%<%dc', a:last[0], a:pattern, a:last[1]+1)
+	else
+		return  printf('\%%%dl%s\%%>%dc', a:first[0], a:pattern, a:first[1]-1)
+\		. "\\|" . printf('\%%>%dl%s\%%<%dl', a:first[0], a:pattern, a:last[0])
+\		. "\\|" . printf('\%%%dl%s\%%<%dc', a:last[0], a:pattern, a:last[1]+1)
+	endif
+endfunction
+
+
+function! s:searchpair_firstpos_end(first, middle, end, pos)
+	let pos = searchpairpos(a:first, a:middle, a:end, 'nWb')
+	if pos == s:nullpos
+		return s:nullpos
+	endif
+	return searchpos(s:region_search_pattern(pos, a:pos, a:first), 'en')
+endfunction
+
+function! s:searchpair_endpos_end(first, middle, end, pos)
+	let pos = searchpairpos(a:first, a:middle, a:end, 'nW')
+	if pos == s:nullpos
+		return s:nullpos
+	endif
+	return searchpos(s:region_search_pattern(pos, a:pos, a:end), 'en')
+endfunction
+
+
 function! s:region_single(key, in)
-	let end   = searchpos(s:regex_escape(a:key), "nW")
-	let start = searchpos(s:regex_escape(a:key), "nbW")
+	let end   = searchpos(s:regex_escape(a:key), a:in ? "nW" : "nWe")
+	let start = searchpos(s:regex_escape(a:key), a:in ? "nbWe" : "nbW")
 	return [start, end]
 endfunction
 
 
 function! s:region_pair(begin, end, in)
-	let end   = searchpairpos(s:regex_escape(a:begin), "", s:regex_escape(a:end), "nW")
-	let start = searchpairpos(s:regex_escape(a:begin), "", s:regex_escape(a:end), "nbW")
+	let end
+\		= a:in ? searchpairpos(s:regex_escape(a:begin), "", s:regex_escape(a:end), "nW")
+\		: s:searchpair_endpos_end(s:regex_escape(a:begin), "", s:regex_escape(a:end), getpos("."))
+
+	let start
+\		= a:in ? s:searchpair_firstpos_end(s:regex_escape(a:begin), "", s:regex_escape(a:end), getpos("."))
+\		: searchpairpos(s:regex_escape(a:begin), "", s:regex_escape(a:end), "nbW")
+
 	return [start, end]
 endfunction
 
@@ -115,8 +150,8 @@ function! s:search_region(begin, end, in)
 endfunction
 
 
-function! s:select_block(in)
-	let blocks = s:blocks()
+function! s:select_block(in, blocks)
+	let blocks = a:blocks
 	let regions = map(copy(blocks), "[s:search_region(v:val[0], v:val[1], a:in), get(v:val, 2, 0)]")
 	call map(filter(regions, "v:val[0][0] != s:nullpos && v:val[0][1] != s:nullpos && (v:val[1] ? v:val[0][0][0] == v:val[0][1][0] : 1)"), "v:val[0]")
 	let regions = filter(copy(regions), 'empty(filter(copy(regions), "s:is_in(".string(v:val).", v:val)"))')
@@ -132,8 +167,8 @@ function! s:to_cursorpos(pos)
 endfunction
 
 
-function! s:select(in)
-	let [start, end] = s:select_block(a:in)
+function! s:select(in, blocks)
+	let [start, end] = s:select_block(a:in, a:blocks)
 	if start == s:nullpos || end == s:nullpos
 		return 0
 	endif
@@ -148,15 +183,67 @@ function! s:select(in)
 endfunction
 
 
+let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", s:default_blocks)
+function! s:blocks()
+	return s:uniq(get(b:, "textobj_multiblock_blocks", []) + g:textobj_multiblock_blocks)
+endfunction
+
+
 function! textobj#multiblock#select_a_forward()
-	return s:select(0)
+	return s:select(0, s:blocks())
 endfunction
 
 function! textobj#multiblock#select_i_forward()
-	return s:select(1)
+	return s:select(1, s:blocks())
 endfunction
 
 
+function! s:as_key(word)
+	return exists("*sha256")  ? substitute(sha256(a:word)[:10], '\L', "x", "g") : a:word
+endfunction
+
+let s:mapexprs_i = {}
+function! textobj#multiblock#mapexpr_i(blocks)
+	let key = s:as_key(string(a:blocks))
+	if has_key(s:mapexprs_i, key)
+		return s:mapexprs_i[key]
+	endif
+	
+	execute
+\"	function! Textobj_multiblock_select_i_" . key . "()\n"
+\"		return s:select(1, " . string(a:blocks) . ")\n"
+\"	endfunction"
+	call textobj#user#plugin('multiblock' . key . "i", {
+\		"-" : {
+\			'select-i': '',
+\			'select-i-function': "Textobj_multiblock_select_i_" . key,
+\		}
+\	})
+	let s:mapexprs_i[key] = "\<Plug>(textobj-multiblock". key . "i-i)"
+	return s:mapexprs_i[key]
+endfunction
+
+
+let s:mapexprs_a = {}
+function! textobj#multiblock#mapexpr_a(blocks)
+	let key = s:as_key(string(a:blocks))
+	if has_key(s:mapexprs_a, key)
+		return s:mapexprs_a[key]
+	endif
+	
+	execute
+\"	function! Textobj_multiblock_select_a_" . key . "()\n"
+\"		return s:select(0, " . string(a:blocks) . ")\n"
+\"	endfunction"
+	call textobj#user#plugin('multiblock' . key . "a", {
+\		"-" : {
+\			'select-a': '',
+\			'select-a-function': "Textobj_multiblock_select_a_" . key,
+\		}
+\	})
+	let s:mapexprs_a[key] = "\<Plug>(textobj-multiblock". key . "a-a)"
+	return s:mapexprs_a[key]
+endfunction
 
 
 let &cpo = s:save_cpo

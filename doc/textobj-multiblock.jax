@@ -86,6 +86,30 @@
 
 括弧を含む範囲
 
+------------------------------------------------------------------------------
+関数						*marching-functions*
+
+textobj#multiblock#mapexpr_i({blocks})		*textobj#multiblock#mapexpr_i()*
+	{blocks} の設定を使用する |:map-<expr>| を返します。
+	この関数は括弧を含まない |:map-<expr>| を返します。
+	{blocks} には |g:textobj_multiblock_blocks| と同等の設定を渡すことがで
+	きます。
+	この関数は |sha256()| が使用できる場合のみ使用することができます。
+Example: >
+	" {} と [] にマッチする map-<expr> を返す
+	omap <expr> ib textobj#multiblock#mapexpr_i([
+	\	["{", "}"],
+	\	["[", "]"],
+	\])
+	vmap <expr> ib textobj#multiblock#mapexpr_i([
+	\	["{", "}"],
+	\	["[", "]"],
+	\])
+<
+
+textobj#multiblock#mapexpr_a({blocks})
+	|textobj#multiblock#mapexpr_i()| と同等ですが、括弧を含みます。
+
 
 ==============================================================================
 設定						*textobj-multiblock-setting*
