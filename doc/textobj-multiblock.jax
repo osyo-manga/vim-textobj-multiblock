@@ -140,6 +140,19 @@ Example: >
     \	[ '"', '"', 1 ],
     \]
 <
+	また、2文字以上の正規表現も設定する事ができます。|pattern|を参照して下
+	さい。
+	|/^| や |/$| を使用する場合、代わりに |/\_^| や |/\_$| を使用する必要
+	があります。
+Example: >
+	" function ～ endfunction
+	" if ～ endif
+	let g:textobj_multiblock_blocks = [
+	\	['\_^\s*\<function\>.*', '\_^\s*endfunction\_$'],
+	\	['\_^\s*\<if\>.*', '\_^\s*\<endif\>\s*\_$'],
+	\]
+<
+
 
 b:textobj_multiblock_blocks			*b:textobj_multiblock_blocks*
 	|g:textobj_multiblock_blocks| と同等の設定です。
