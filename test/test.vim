@@ -26,6 +26,5 @@ function! s:test_test()
 	OwlCheck !s:is_in([p3, p2], p2)
 	OwlCheck !s:is_in([p3, p2], p3)
 	OwlCheck  s:is_in([p1, p4], [p2, p3])
-
 endfunction
 

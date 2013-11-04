@@ -33,29 +33,43 @@ function! s:is_in(range, pos)
 \		 : s:pos_less(a:range[0], a:pos) && s:pos_less(a:pos, a:range[1])
 endfunction
 
-function! s:pos_next(pos)
+function! s:pos_next(pos, ...)
+	if a:0 == 0
+		return s:pos_next(a:pos, getline(a:pos[0]))
+	endif
 	if a:pos == s:nullpos
 		return a:pos
 	endif
+	let line = a:1
 	let lnum = a:pos[0]
 	let col  = a:pos[1]
-	let line_size = len(getline(lnum))
+	let line_size = len(a:1)
+	echo len(get(split(line[col-1:], '\zs'), 0))
 	return [
-\		line_size == col ? lnum + 1 : lnum,
-\		line_size == col ? 1        : col + 1,
+\		line_size <= col ? lnum + 1 : lnum,
+\		line_size <= col ? 1        : col + len(get(split(line[col-1:], '\zs'), 0, "") ),
 \	]
 endfunction
 
-function! s:pos_prev(pos)
+
+function! s:pos_prev(pos, ...)
+	let [lnum, col] = a:pos
+	if a:0 == 0
+		return s:pos_prev(a:pos, getline(lnum), getline(lnum-1))
+	endif
+
+	let line = a:1
+	let prev_line = a:2
 	if a:pos == s:nullpos
 		return a:pos
 	endif
-	let [lnum, col] = a:pos
+	let line = a:1
 	return [
 \		col >= 2 ? lnum  : lnum-1,
-\		col >= 2 ? col-1 : len(getline(lnum-1))
+\		col >= 2 ? col - len(get(split(line[:col-1], '\zs'), -2, "")) : len(prev_line)
 \	]
 endfunction
+
 
 
 let s:default_blocks = [
