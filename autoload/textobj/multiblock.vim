@@ -44,7 +44,6 @@ function! s:pos_next(pos, ...)
 	let lnum = a:pos[0]
 	let col  = a:pos[1]
 	let line_size = len(a:1)
-	echo len(get(split(line[col-1:], '\zs'), 0))
 	return [
 \		line_size <= col ? lnum + 1 : lnum,
 \		line_size <= col ? 1        : col + len(get(split(line[col-1:], '\zs'), 0, "") ),
