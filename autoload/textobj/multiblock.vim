@@ -109,7 +109,7 @@ function! s:searchpair_firstpos_end(first, middle, end, pos)
 	if pos == s:nullpos
 		return s:nullpos
 	endif
-	return searchpos(s:region_search_pattern(pos, a:pos, a:first), 'en')
+	return searchpos(s:region_search_pattern(pos, a:pos, a:first), 'enb')
 endfunction
 
 function! s:searchpair_endpos_end(first, middle, end, pos)
@@ -129,13 +129,15 @@ endfunction
 
 
 function! s:region_pair(begin, end, in)
-	let end
-\		= a:in ? searchpairpos(s:regex_escape(a:begin), "", s:regex_escape(a:end), "nW")
-\		: s:searchpair_endpos_end(s:regex_escape(a:begin), "", s:regex_escape(a:end), getpos("."))
+	let first = s:regex_escape(a:begin)
+	let last  = s:regex_escape(a:end)
+	let end = a:in
+\		? searchpairpos(first, "", last, "nW")
+\		: s:searchpair_endpos_end(first, "", last, getpos("."))
 
-	let start
-\		= a:in ? s:searchpair_firstpos_end(s:regex_escape(a:begin), "", s:regex_escape(a:end), getpos("."))
-\		: searchpairpos(s:regex_escape(a:begin), "", s:regex_escape(a:end), "nbW")
+	let start = a:in
+\		? s:searchpair_firstpos_end(first, "", last, getpos("."))
+\		: searchpairpos(first, "", last, "nbW")
 
 	return [start, end]
 endfunction
