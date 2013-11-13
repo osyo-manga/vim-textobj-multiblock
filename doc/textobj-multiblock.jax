@@ -1,5 +1,18 @@
 *textobj-multiblock.txt*	複数の括弧に対応している textobj
 
+==============================================================================
+目次						*textobj-multiblock-contents*
+
+概要				|textobj-multiblock-introduction|
+範囲例				|textobj-multiblock-example|
+設定例				|textobj-multiblock-customizing|
+インターフェース		|textobj-multiblock-interface|
+  マッピング			  |textobj-multiblock-mapping|
+  関数				  |textobj-multiblock-functions|
+設定				|textobj-multiblock-setting|
+  textobj-multiblock の変数	  |textobj-multiblock-variables|
+
+
 
 ==============================================================================
 概要						*textobj-multiblock-introduction*
@@ -87,7 +100,7 @@
 括弧を含む範囲
 
 ------------------------------------------------------------------------------
-関数						*marching-functions*
+関数						*textobj-multiblock-functions*
 
 textobj#multiblock#mapexpr_i({blocks})		*textobj#multiblock#mapexpr_i()*
 	{blocks} の設定を使用する |:map-<expr>| を返します。
