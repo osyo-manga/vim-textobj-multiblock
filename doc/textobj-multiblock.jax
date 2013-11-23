@@ -172,5 +172,17 @@ b:textobj_multiblock_blocks			*b:textobj_multiblock_blocks*
 	|g:textobj_multiblock_blocks| よりも優先して使用されます。
 
 
+g:textobj_multiblock_search_limit	*g:textobj_multiblock_search_limit*
+	検索する範囲を設定します。
+	この変数が定義されている場合、カーソル行からその値の行数のみをチェック
+	します。
+	0 が設定されている場合は全範囲をチェックします。
+	バッファの行数が多くて遅いと感じる場合はこの値を設定して調整して下さ
+	い。
+Example: >
+	" カーソル行から前後200行の範囲のみチェックする
+	let g:textobj_multiblock_search_limit = 200
+<
+
 ==============================================================================
 vim:tw=78:fo=tcq2mM:ts=8:ft=help:norl

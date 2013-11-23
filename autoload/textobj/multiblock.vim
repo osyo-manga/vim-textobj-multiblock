@@ -100,6 +100,23 @@ function! s:get_cursorchar()
 endfunction
 
 
+function! s:back_limit()
+	let limit = get(g:, "textobj_multiblock_search_limit", 0)
+	if limit
+		return max([line(".") - limit, 1])
+	endif
+	return 0
+endfunction
+
+function! s:forward_limit()
+	let limit = get(g:, "textobj_multiblock_search_limit", 0)
+	if limit
+		return min([line(".") + limit, line("$")])
+	endif
+	return 0
+endfunction
+
+
 
 function! s:region_search_pattern(first, last, pattern)
 	if a:first == a:last
@@ -118,7 +135,7 @@ endfunction
 
 
 function! s:searchpair_firstpos_end(first, middle, end, pos)
-	let pos = searchpairpos(a:first, a:middle, a:end, 'nWb')
+	let pos = searchpairpos(a:first, a:middle, a:end, 'nWb', "", s:back_limit())
 	if pos == s:nullpos
 		return s:nullpos
 	endif
@@ -126,7 +143,7 @@ function! s:searchpair_firstpos_end(first, middle, end, pos)
 endfunction
 
 function! s:searchpair_endpos_end(first, middle, end, pos)
-	let pos = searchpairpos(a:first, a:middle, a:end, 'nW')
+	let pos = searchpairpos(a:first, a:middle, a:end, 'nW', "", s:forward_limit())
 	if pos == s:nullpos
 		return s:nullpos
 	endif
@@ -135,8 +152,8 @@ endfunction
 
 
 function! s:region_single(key, in)
-	let end   = searchpos(s:regex_escape(a:key), a:in ? "nW" : "nWe")
-	let start = searchpos(s:regex_escape(a:key), a:in ? "nbWe" : "nbW")
+	let end   = searchpos(s:regex_escape(a:key), a:in ? "nW" : "nWe", s:forward_limit())
+	let start = searchpos(s:regex_escape(a:key), a:in ? "nbWe" : "nbW", s:back_limit())
 	return [start, end]
 endfunction
 
@@ -145,12 +162,12 @@ function! s:region_pair(begin, end, in)
 	let first = s:regex_escape(a:begin)
 	let last  = s:regex_escape(a:end)
 	let end = a:in
-\		? searchpairpos(first, "", last, "nW")
+\		? searchpairpos(first, "", last, "nW", "", s:forward_limit())
 \		: s:searchpair_endpos_end(first, "", last, getpos("."))
 
 	let start = a:in
 \		? s:searchpair_firstpos_end(first, "", last, getpos("."))
-\		: searchpairpos(first, "", last, "nbW")
+\		: searchpairpos(first, "", last, "nbW", "", s:back_limit())
 
 	return [start, end]
 endfunction
