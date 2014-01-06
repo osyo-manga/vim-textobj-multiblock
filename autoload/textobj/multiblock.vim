@@ -81,7 +81,6 @@ let s:default_blocks = [
 \]
 
 
-
 function! s:get_block_pair(block)
 	let blocks = s:blocks()
 	let result = get(filter(copy(blocks), "v:val[0] ==# a:block || v:val[1] ==# a:block"), 0, [])
@@ -134,18 +133,37 @@ function! s:region_search_pattern(first, last, pattern)
 endfunction
 
 
-function! s:searchpair_firstpos_end(first, middle, end, pos)
-	let pos = searchpairpos(a:first, a:middle, a:end, 'nWb', "", s:back_limit())
+function! s:searchpairpos_first(first, middle, end, flag, limit)
+	return searchpairpos(a:first, a:middle, a:end, a:flag, "", a:limit)
+endfunction
+
+
+function! s:searchpairpos_end(first, middle, end, flag, limit)
+	return searchpairpos(a:first, a:middle, a:end, a:flag, "", a:limit)
+endfunction
+
+
+function! s:searchpair_firstpos_end(first, middle, end, pos, ...)
+	let flag = get(a:, 1, "")
+	let pos = s:searchpairpos_first(a:first, a:middle, a:end, 'nWb' . flag, s:back_limit())
 	if pos == s:nullpos
 		return s:nullpos
+	endif
+	if strchars(a:first) == 1
+		return pos
 	endif
 	return searchpos(s:region_search_pattern(pos, a:pos, a:first), 'enb')
 endfunction
 
-function! s:searchpair_endpos_end(first, middle, end, pos)
-	let pos = searchpairpos(a:first, a:middle, a:end, 'nW', "", s:forward_limit())
+
+function! s:searchpair_endpos_end(first, middle, end, pos, ...)
+	let flag = get(a:, 1, "")
+	let pos = s:searchpairpos_end(a:first, a:middle, a:end, 'nW' . flag, s:forward_limit())
 	if pos == s:nullpos
 		return s:nullpos
+	endif
+	if strchars(a:end) == 1
+		return pos
 	endif
 	return searchpos(s:region_search_pattern(pos, a:pos, a:end), 'en')
 endfunction
@@ -158,16 +176,33 @@ function! s:region_single(key, in)
 endfunction
 
 
-function! s:region_pair(begin, end, in)
+" ( にカーソルがある場合、外側の範囲を選択する
+function! s:region_pair_outer(begin, end, in)
 	let first = s:regex_escape(a:begin)
 	let last  = s:regex_escape(a:end)
 	let end = a:in
-\		? searchpairpos(first, "", last, "nW", "", s:forward_limit())
-\		: s:searchpair_endpos_end(first, "", last, getpos("."))
+\		? s:searchpairpos_end(first, "", last, "nWc", s:forward_limit())
+\		: s:searchpair_endpos_end(first, "", last, getpos("."), "c")
 
 	let start = a:in
 \		? s:searchpair_firstpos_end(first, "", last, getpos("."))
-\		: searchpairpos(first, "", last, "nbW", "", s:back_limit())
+\		: s:searchpairpos_first(first, "", last, "nbW", s:back_limit())
+
+	return [start, end]
+endfunction
+
+
+" ( にカーソルがある場合、内側の範囲を選択する
+function! s:region_pair_inner(begin, end, in)
+	let first = s:regex_escape(a:begin)
+	let last  = s:regex_escape(a:end)
+	let end = a:in
+\		? s:searchpairpos_end(first, "", last, "nW", s:forward_limit())
+\		: s:searchpair_endpos_end(first, "", last, getpos("."))
+
+	let start = a:in
+\		? s:searchpair_firstpos_end(first, "", last, getpos("."), "c")
+\		: s:searchpairpos_first(first, "", last, "nbWc", s:back_limit())
 
 	return [start, end]
 endfunction
@@ -175,16 +210,20 @@ endfunction
 
 function! s:search_region(begin, end, in)
 	if a:begin ==# a:end
-		return s:region_single(a:begin, a:in)
+		return [ s:region_single(a:begin, a:in) ]
 	else
-		return s:region_pair(a:begin, a:end, a:in)
+		return [
+\			s:region_pair_inner(a:begin, a:end, a:in),
+\			s:region_pair_outer(a:begin, a:end, a:in)
+\		]
 	endif
 endfunction
 
 
 function! s:select_block(in, blocks)
 	let blocks = a:blocks
-	let regions = map(copy(blocks), "[s:search_region(v:val[0], v:val[1], a:in), get(v:val, 2, 0)]")
+	let regions = map(copy(blocks), "map(s:search_region(v:val[0], v:val[1], a:in), '[v:val, ' . get(v:val, 2, 0) . ']')")
+	let regions = eval(join(regions, '+'))
 	call map(filter(regions, "v:val[0][0] != s:nullpos && v:val[0][1] != s:nullpos && (v:val[1] ? v:val[0][0][0] == v:val[0][1][0] : 1)"), "v:val[0]")
 	let regions = filter(copy(regions), 'empty(filter(copy(regions), "s:is_in(".string(v:val).", v:val)"))')
 	return get(regions, 0, [s:nullpos, s:nullpos])
@@ -280,5 +319,3 @@ endfunction
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
-
-
