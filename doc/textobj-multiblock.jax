@@ -184,5 +184,33 @@ Example: >
 	let g:textobj_multiblock_search_limit = 200
 <
 
+				*g:textobj#multiblock#enable_block_in_cursor*
+g:textobj#multiblock#enable_block_in_cursor
+	1 が設定されていればカーソル上にブロックが存在する場合にそのブロックを
+	含んだ範囲が考慮されるようになります。
+Default: >
+	let g:textobj#multiblock#enable_block_in_cursor = 1
+<
+
+g:textobj#multiblock#default_blocks	*g:textobj#multiblock#default_blocks*
+	デフォルトで使用されるブロックが設定されています。
+	基本的にユーザはこの変数の値は変更しませんが、デフォルト値を無効にした
+	い場合はこの変数に [] を設定して下さい。
+Default: >
+	let g:textobj#multiblock#default_blocks = [
+	\	[ "(", ")" ],
+	\	[ "[", "]" ],
+	\	[ "{", "}" ],
+	\	[ '<', '>' ],
+	\	[ '"', '"' ],
+	\	[ "'", "'" ],
+	\]
+<
+Example: >
+	" デフォルト値を無効にする
+	let g:textobj#multiblock#default_blocks = []
+<
+
+
 ==============================================================================
 vim:tw=78:fo=tcq2mM:ts=8:ft=help:norl

@@ -3,6 +3,8 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
+let g:textobj#multiblock#enable_block_in_cursor = get(g:, "textobj#multiblock#enable_block_in_cursor", 1)
+
 
 function! s:uniq(list)
 	return reverse(filter(reverse(a:list), "count(a:list, v:val) <= 1"))
@@ -70,7 +72,6 @@ function! s:pos_prev(pos, ...)
 endfunction
 
 
-
 let s:default_blocks = [
 \	[ "(", ")" ],
 \	[ "[", "]" ],
@@ -79,6 +80,23 @@ let s:default_blocks = [
 \	[ '"', '"' ],
 \	[ "'", "'" ],
 \]
+
+
+let g:textobj#multiblock#default_blocks = get(g:, "textobj#multiblock#default_blocks", [
+\	[ "(", ")" ],
+\	[ "[", "]" ],
+\	[ "{", "}" ],
+\	[ '<', '>' ],
+\	[ '"', '"' ],
+\	[ "'", "'" ],
+\])
+
+
+" let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", s:default_blocks)
+let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", {})
+function! s:blocks()
+	return s:uniq(get(b:, "textobj_multiblock_blocks", []) + g:textobj_multiblock_blocks + g:textobj#multiblock#default_blocks)
+endfunction
 
 
 function! s:get_block_pair(block)
@@ -208,14 +226,33 @@ function! s:region_pair_inner(begin, end, in)
 endfunction
 
 
+function! s:region_pair(begin, end, in)
+	let first = s:regex_escape(a:begin)
+	let last  = s:regex_escape(a:end)
+	let end = a:in
+\		? s:searchpairpos_end(first, "", last, "nW", s:forward_limit())
+\		: s:searchpair_endpos_end(first, "", last, getpos("."))
+
+	let start = a:in
+\		? s:searchpair_firstpos_end(first, "", last, getpos("."))
+\		: s:searchpairpos_first(first, "", last, "nbW", s:back_limit())
+
+	return [start, end]
+endfunction
+
+
 function! s:search_region(begin, end, in)
 	if a:begin ==# a:end
 		return [ s:region_single(a:begin, a:in) ]
 	else
-		return [
-\			s:region_pair_inner(a:begin, a:end, a:in),
-\			s:region_pair_outer(a:begin, a:end, a:in)
-\		]
+		if g:textobj#multiblock#enable_block_in_cursor
+			return [
+\				s:region_pair_inner(a:begin, a:end, a:in),
+\				s:region_pair_outer(a:begin, a:end, a:in)
+\			]
+		else
+			return [ s:region_pair(a:begin, a:end, a:in) ]
+		endif
 	endif
 endfunction
 
@@ -251,12 +288,6 @@ function! s:select(in, blocks)
 	else
 		return ["v", s:to_cursorpos(start), s:to_cursorpos(end)]
 	endif
-endfunction
-
-
-let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", s:default_blocks)
-function! s:blocks()
-	return s:uniq(get(b:, "textobj_multiblock_blocks", []) + g:textobj_multiblock_blocks)
 endfunction
 
 
