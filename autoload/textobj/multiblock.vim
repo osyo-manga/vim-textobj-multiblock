@@ -87,8 +87,8 @@ let g:textobj#multiblock#default_blocks = get(g:, "textobj#multiblock#default_bl
 \	[ "[", "]" ],
 \	[ "{", "}" ],
 \	[ '<', '>' ],
-\	[ '"', '"' ],
-\	[ "'", "'" ],
+\	[ '"', '"', 1 ],
+\	[ "'", "'", 1 ],
 \])
 
 
