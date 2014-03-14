@@ -93,7 +93,7 @@ let g:textobj#multiblock#default_blocks = get(g:, "textobj#multiblock#default_bl
 
 
 " let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", s:default_blocks)
-let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", {})
+let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", [])
 function! s:blocks()
 	return s:uniq(get(b:, "textobj_multiblock_blocks", []) + g:textobj_multiblock_blocks + g:textobj#multiblock#default_blocks)
 endfunction
