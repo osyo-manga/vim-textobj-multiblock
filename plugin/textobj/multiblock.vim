@@ -16,6 +16,7 @@ call textobj#user#plugin('multiblock', {
 \      },
 \    })
 
+let g:textobj_multiblock_search_limit = get(g:, "textobj_multiblock_search_limit", 100)
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

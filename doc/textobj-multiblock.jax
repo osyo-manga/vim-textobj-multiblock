@@ -179,6 +179,9 @@ g:textobj_multiblock_search_limit	*g:textobj_multiblock_search_limit*
 	0 が設定されている場合は全範囲をチェックします。
 	バッファの行数が多くて遅いと感じる場合はこの値を設定して調整して下さ
 	い。
+Default: >
+	let g:textobj_multiblock_search_limit = 100
+<
 Example: >
 	" カーソル行から前後200行の範囲のみチェックする
 	let g:textobj_multiblock_search_limit = 200
