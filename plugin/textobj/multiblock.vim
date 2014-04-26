@@ -6,6 +6,7 @@ let g:loaded_textobj_multiblock = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
+let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", [])
 
 call textobj#user#plugin('multiblock', {
 \      '-': {

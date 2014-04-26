@@ -93,7 +93,6 @@ let g:textobj#multiblock#default_blocks = get(g:, "textobj#multiblock#default_bl
 
 
 " let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", s:default_blocks)
-let g:textobj_multiblock_blocks = get(g:, "textobj_multiblock_blocks", [])
 function! s:blocks()
 	return s:uniq(get(b:, "textobj_multiblock_blocks", []) + g:textobj_multiblock_blocks + g:textobj#multiblock#default_blocks)
 endfunction
@@ -108,7 +107,7 @@ endfunction
 
 
 function! s:regex_escape(str)
-	return substitute(substitute(a:str, '[', '\\[', 'g'), ']', '\\]', 'g')
+	return escape(a:str, '[]')
 endfunction
 
 
@@ -167,7 +166,7 @@ function! s:searchpair_firstpos_end(first, middle, end, pos, ...)
 	if pos == s:nullpos
 		return s:nullpos
 	endif
-	if strchars(a:first) == 1
+	if strchars(a:first) == 1 || a:first =~ '\\.'
 		return pos
 	endif
 	return searchpos(s:region_search_pattern(pos, a:pos, a:first), 'enb')
@@ -180,7 +179,7 @@ function! s:searchpair_endpos_end(first, middle, end, pos, ...)
 	if pos == s:nullpos
 		return s:nullpos
 	endif
-	if strchars(a:end) == 1
+	if strchars(a:end) == 1 || a:first =~ '\\.'
 		return pos
 	endif
 	return searchpos(s:region_search_pattern(pos, a:pos, a:end), 'en')
