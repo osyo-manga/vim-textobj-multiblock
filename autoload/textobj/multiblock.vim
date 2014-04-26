@@ -166,7 +166,7 @@ function! s:searchpair_firstpos_end(first, middle, end, pos, ...)
 	if pos == s:nullpos
 		return s:nullpos
 	endif
-	if strchars(a:first) == 1 || a:first =~ '\\.'
+	if strchars(a:first) == 1 || a:first =~ '^\\[[\]]$'
 		return pos
 	endif
 	return searchpos(s:region_search_pattern(pos, a:pos, a:first), 'enb')
@@ -179,7 +179,7 @@ function! s:searchpair_endpos_end(first, middle, end, pos, ...)
 	if pos == s:nullpos
 		return s:nullpos
 	endif
-	if strchars(a:end) == 1 || a:first =~ '\\.'
+	if strchars(a:end) == 1 || a:first =~ '^\\[[\]]$'
 		return pos
 	endif
 	return searchpos(s:region_search_pattern(pos, a:pos, a:end), 'en')
