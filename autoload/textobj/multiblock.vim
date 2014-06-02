@@ -6,8 +6,10 @@ set cpo&vim
 let g:textobj#multiblock#enable_block_in_cursor = get(g:, "textobj#multiblock#enable_block_in_cursor", 1)
 
 
+let s:List = vital#of("textobj_multiblock").import("Data.List")
+
 function! s:uniq(list)
-	return reverse(filter(reverse(a:list), "count(a:list, v:val) <= 1"))
+	return s:List.uniq_by(a:list, "[v:val[0], v:val[1]]")
 endfunction
 
 
@@ -256,9 +258,22 @@ function! s:search_region(begin, end, in)
 endfunction
 
 
+function! s:as_block(block)
+	if type(a:block) == type({})
+		return extend({
+\			"equal_line" : 0
+\		}, a:block)
+	endif
+	return {
+\		"begin" : a:block[0],
+\		"end"   : a:block[1],
+\		"equal_line" : get(a:block, 2, 0),
+\	}
+endfunction
+
 function! s:select_block(in, blocks)
-	let blocks = a:blocks
-	let regions = map(copy(blocks), "map(s:search_region(v:val[0], v:val[1], a:in), '[v:val, ' . get(v:val, 2, 0) . ']')")
+	let blocks = map(copy(a:blocks), "s:as_block(v:val)")
+	let regions = map(blocks, "map(s:search_region(v:val.begin, v:val.end, a:in), '[v:val, ' . v:val.equal_line . ']')")
 	let regions = eval(join(regions, '+'))
 	call map(filter(regions, "v:val[0][0] != s:nullpos && v:val[0][1] != s:nullpos && (v:val[1] ? v:val[0][0][0] == v:val[0][1][0] : 1)"), "v:val[0]")
 	let regions = filter(copy(regions), 'empty(filter(copy(regions), "s:is_in(".string(v:val).", v:val)"))')
